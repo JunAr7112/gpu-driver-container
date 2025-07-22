@@ -296,17 +296,12 @@ release:ngc-rhel9.6:
     OUT_DIST: "rhel9.6"
 
 # First job to process build information
-process-build-info:
+process-build-info-release:
   stage: ngc-publish
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_TAG
   needs:
-    - job: release:staging-ubuntu20.04
-      optional: true
-    - job: release:staging-ubuntu22.04
-      optional: true
-    - job: release:staging-ubuntu24.04
-      optional: true
-    - job: release:staging-rhel8
-      optional: true
     - job: release:ngc-ubuntu20.04
       optional: true
     - job: release:ngc-ubuntu22.04
@@ -342,7 +337,6 @@ process-build-info:
           fi
         done
       done
-
       # Verify we got some data
       if [ ! -s combined-build-info.txt ]; then
         echo "Error: No build information was collected"
@@ -351,19 +345,67 @@ process-build-info:
   artifacts:
     paths:
       - combined-build-info.txt
-  
-# Second job to trigger downstream pipeline
+
+process-build-info-staging:
+  stage: ngc-publish
+  allow_failure: true
+  needs:
+    - job: release:staging-ubuntu20.04
+      optional: true
+    - job: release:staging-ubuntu22.04
+      optional: true
+    - job: release:staging-ubuntu24.04
+      optional: true
+    - job: release:staging-rhel8
+      optional: true
+  script:
+    - |
+      distributions="ubuntu20.04 ubuntu22.04 ubuntu24.04 rhel8"
+      > combined-build-info-staging.txt
+      for dist in $distributions; do
+        for driver_version in ${DRIVER_VERSIONS}; do
+          if [ -f "build-info-${driver_version}-${dist}.txt" ]; then
+            cat "build-info-${driver_version}-${dist}.txt" >> combined-build-info-staging.txt
+          fi
+        done
+      done
+      # Verify we got some data
+      if [ ! -s combined-build-info-staging.txt ]; then
+        echo "Error: No build information was collected"
+        exit 1
+      fi
+  artifacts:
+    paths:
+      - combined-build-info-staging.txt
+
 raise-publishing-merge-request:
   stage: ngc-publish
+  rules:
+    - if: $CI_COMMIT_TAG
   needs:
-    - job: process-build-info
+    - job: process-build-info-release
       artifacts: true
   image: 
     name: "${CNT_NGC_PUBLISH_IMAGE}"
     pull_policy: always
   variables:
     GITLAB_ACCESS_TOKEN: "${CNT_GITLAB_TOKEN}"
-    NGC_PUBLISHING_PROJECT_PATH: "dl/container-dev/ngc-automation"
+    NGC_PUBLISHING_PROJECT_PATH: "ngc/publishing/ngc-publishing-configs"
   script:
     - cnt-ngc-publish render --project-name "gpu-driver-container" --versions-file "combined-build-info.txt" --output gpu-driver-container.yaml
-    - cnt-ngc-publish merge-request --files "gpu-driver-container.yaml
+    - cnt-ngc-publish merge-request --files "gpu-driver-container.yaml"
+
+raise-staging-merge-request:
+  stage: ngc-publish
+  needs:
+    - job: process-build-info-staging
+      artifacts: true
+  image:
+    name: "${CNT_NGC_PUBLISH_IMAGE}"
+    pull_policy: always
+  variables:
+    GITLAB_ACCESS_TOKEN: "${CNT_GITLAB_TOKEN}"
+    NGC_PUBLISHING_PROJECT_PATH: "dl/container-dev/ngc-automation"
+  script:
+    - cnt-ngc-publish render --project-name "gpu-driver-container" --versions-file "combined-build-info-staging.txt" --output gpu-driver-container.yaml
+    - cnt-ngc-publish merge-request --files "gpu-driver-container.yaml"

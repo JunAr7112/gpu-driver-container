@@ -1,10 +1,7 @@
 {
-    "extends": ["config:base"],
+    "extends": ["config:recommended"],
     "enabledManagers": ["dockerfile"],
     "labels": ["dependencies", "docker"],
-    "command": {
-        "enabled": true
-    },
     "baseBranches": ["main", "test_renovate"],
     "prConcurrentLimit": 15
 }

@@ -1,9 +1,6 @@
 {
     "extends": ["config:base"],
     "enabledManagers": ["dockerfile"],
-    "docker": {
-        "registryUrls": ["https://index.docker.io/v1/"]
-    },
     "labels": ["dependencies", "docker"],
     "command": {
         "enabled": true

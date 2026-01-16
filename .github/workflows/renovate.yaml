@@ -20,4 +20,5 @@ jobs:
           RENOVATE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RENOVATE_REPOSITORIES: '["JunAr7112/gpu-driver-container"]'
           RENOVATE_ONBOARDING: false
+          LOG_LEVEL: debug
           

@@ -1,7 +1,14 @@
 {
-    "extends": ["config:recommended"],
+    "extends": ["config:base"],
     "enabledManagers": ["dockerfile"],
+    "schedule": ["daily"],
     "labels": ["dependencies", "docker"],
-    "baseBranches": ["main", "test_renovate"],
-    "prConcurrentLimit": 15
+    "prConcurrentLimit": 15,
+    "packageRules": [
+        {
+            "matchDatasources": ["docker"],
+            "matchPackageNames": ["ubuntu"],
+            "versioning": "ubuntu"
+        }
+    ]
 }

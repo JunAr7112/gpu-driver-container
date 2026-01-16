@@ -3,6 +3,7 @@
     "enabledManagers": ["dockerfile", "custom.regex"],
     "labels": ["dependencies", "docker"],
     "prConcurrentLimit": 15,
+    "prHourlyLimit": 0,
     "recreateClosed": true,
     "customManagers": [
         {

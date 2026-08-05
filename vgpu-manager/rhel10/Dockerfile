@@ -36,7 +36,7 @@ RUN chmod +x NVIDIA-Linux-${DRIVER_ARCH}-${DRIVER_VERSION}-vgpu-kvm.run
 COPY nvidia-driver /usr/local/bin
 COPY ocp_dtk_entrypoint /usr/local/bin
 
-RUN dnf install -y pciutils && \
+RUN dnf install -y gcc make kmod pciutils procps-ng && \
     dnf clean all && \
     rm -rf /var/cache/dnf/*
 
